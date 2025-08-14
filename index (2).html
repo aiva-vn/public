@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Public HTML – aiva-vn</title>
+  <meta name="description" content="Danh sách các file HTML public trên GitHub Pages của aiva-vn/public">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0f1a;
+      --card:#121a2a;
+      --muted:#9fb0c3;
+      --text:#eaf2ff;
+      --primary:#5ec6ff;
+      --accent:#8bffb0;
+      --danger:#ff7a7a;
+      --ring:#2a3a55;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:
+        radial-gradient(1200px 600px at 85% -10%, #17315566, transparent),
+        radial-gradient(900px 500px at -5% 10%, #1a3b3b66, transparent),
+        var(--bg);
+      color:var(--text);
+    }
+    header{
+      max-width:1100px;margin:32px auto 16px;padding:0 20px;
+      display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    }
+    .logo{
+      display:grid;place-items:center;width:44px;height:44px;border-radius:12px;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      color:#001018;font-weight:900;letter-spacing:.5px;
+      box-shadow:0 10px 24px #0ff3;
+      user-select:none;
+    }
+    h1{font-size:clamp(20px,4vw,28px);margin:0;font-weight:800;letter-spacing:.2px}
+    .sub{color:var(--muted);font-size:14px;margin-top:4px}
+    .searchbar{
+      margin-left:auto;display:flex;gap:10px;align-items:center;flex:1;min-width:260px;max-width:420px;
+    }
+    .searchbar input{
+      width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--ring);
+      background:#0f1625;color:var(--text);outline:none;
+    }
+    .searchbar button{
+      padding:12px 14px;border-radius:12px;border:1px solid var(--ring);background:#0f1625;color:var(--text);cursor:pointer;
+    }
+    main{max-width:1100px;margin:8px auto 60px;padding:0 20px}
+    .grid{
+      display:grid;gap:16px;
+      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    }
+    .card{
+      position:relative;padding:16px;border:1px solid var(--ring);border-radius:16px;background:linear-gradient(180deg,#10192b,#0f1625);
+      box-shadow:0 8px 24px rgba(0,0,0,.25);
+      transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .card:hover{transform:translateY(-2px);border-color:#35507a;box-shadow:0 12px 28px rgba(0,0,0,.34)}
+    .title{font-weight:700;margin:2px 0 8px;font-size:16px;line-height:1.4}
+    .meta{color:var(--muted);font-size:12px}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;font-weight:600;
+      padding:10px 12px;border-radius:12px;border:1px solid var(--ring);background:#0e1726;color:var(--text);
+      text-decoration:none;cursor:pointer;flex:1;justify-content:center
+    }
+    .btn.primary{background:linear-gradient(135deg,#1a5cff,#25d7ff33);border-color:#2c4fb9}
+    .btn.copy{border-style:dashed}
+    footer{max-width:1100px;margin:24px auto;padding:0 20px;color:var(--muted);font-size:12px}
+    .empty{padding:24px;border:1px dashed #3a4a6a;border-radius:14px;text-align:center;color:var(--muted);}
+    .pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#0e1c2a;border:1px solid var(--ring);font-size:11px;color:var(--muted)}
+    .loading{opacity:0.7;filter:saturate(0.7)}
+    @media (max-width:600px){.searchbar{min-width:unset;max-width:unset;order:3;width:100%}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">AI</div>
+    <div>
+      <h1>Danh sách các trang HTML công khai</h1>
+      <div class="sub">Repo: <span class="pill">aiva-vn / public</span>. Tự động đọc danh sách file .html từ GitHub.</div>
+    </div>
+    <div class="searchbar">
+      <input id="q" type="search" placeholder="Tìm theo tên… (ví dụ: zoom, ke-hoach, muc-tieu)" aria-label="Tìm">
+      <button id="clearBtn" title="Xóa tìm kiếm">Xóa</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="grid" class="grid loading" aria-live="polite"></div>
+    <div id="empty" class="empty" style="display:none">Chưa thấy file HTML nào. Hãy thêm file .html vào repo <b>aiva-vn/public</b>.</div>
+  </main>
+
+  <footer>
+    <div>Trang index này chạy trên GitHub Pages. Tên file giữ nguyên tiếng Việt cũng được; link sẽ tự mã hóa.</div>
+  </footer>
+
+<script>
+const owner = 'aiva-vn';
+const repo  = 'public';
+const base  = `https://${owner}.github.io/${repo}/`;
+
+const grid = document.getElementById('grid');
+const empty = document.getElementById('empty');
+const q = document.getElementById('q');
+const clearBtn = document.getElementById('clearBtn');
+
+function humanSize(bytes){
+  if(!bytes && bytes!==0) return '';
+  const units=['B','KB','MB','GB']; let i=0;
+  while(bytes>=1024 && i<units.length-1){bytes/=1024;i++;}
+  return bytes.toFixed(bytes<10 && i>0 ? 1 : 0)+' '+units[i];
+}
+
+function render(files){
+  grid.innerHTML = '';
+  if(files.length === 0){ empty.style.display='block'; grid.classList.remove('loading'); return; }
+  empty.style.display='none';
+  for(const f of files){
+    const url = base + encodeURIComponent(f.name);
+    const item = document.createElement('div');
+    item.className='card';
+    item.innerHTML = `
+      <div class="title">${f.name}</div>
+      <div class="meta">Kích thước: ${humanSize(f.size)} • Cập nhật: ${new Date(f.date).toLocaleString()}</div>
+      <div class="actions">
+        <a class="btn primary" href="${url}" target="_blank" rel="noopener">Mở trang</a>
+        <button class="btn copy" data-url="${url}">Copy link</button>
+      </div>
+    `;
+    grid.appendChild(item);
+  }
+  grid.classList.remove('loading');
+}
+
+async function load(){
+  try{
+    grid.classList.add('loading');
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/`, {headers:{'Accept':'application/vnd.github+json'}});
+    const data = await res.json();
+    const htmlFiles = (Array.isArray(data) ? data : []).filter(x => x.type==='file' && /\.html?$/i.test(x.name));
+    const normalized = htmlFiles.map(x => ({ name:x.name, size:x.size, date:x.sha ? Date.now() : Date.now() }));
+    // Try to get commit dates for better "updated at"
+    try{
+      const commitsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=100`);
+      const commits = await commitsRes.json();
+      const latestByFile = {};
+      for(const c of (Array.isArray(commits)?commits:[])){
+        if(c.files){ // not present on list api
+          for(const f of c.files){
+            latestByFile[f.filename] = c.commit.author.date;
+          }
+        }
+      }
+      normalized.forEach(n => {
+        n.date = Date.now(); // fallback (GitHub API list commits doesn't include files by default without extra requests)
+      });
+    }catch{ /* ignore */ }
+
+    // Sort by name
+    normalized.sort((a,b)=> a.name.localeCompare(b.name));
+    render(normalized);
+
+    // Search
+    q.addEventListener('input', () => {
+      const term = q.value.trim().toLowerCase();
+      const filtered = normalized.filter(f => f.name.toLowerCase().includes(term));
+      render(filtered);
+    });
+    clearBtn.addEventListener('click', () => { q.value=''; q.dispatchEvent(new Event('input')); q.focus(); });
+    q.dispatchEvent(new Event('input'));
+  }catch(e){
+    grid.classList.remove('loading');
+    grid.innerHTML = '<div class="empty">Không tải được danh sách file. Vui lòng kiểm tra kết nối.</div>';
+  }
+}
+load();
+
+// Copy link handler
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button.btn.copy');
+  if(!btn) return;
+  const url = btn.getAttribute('data-url');
+  navigator.clipboard.writeText(url).then(()=>{
+    btn.textContent = 'Đã copy';
+    setTimeout(()=>btn.textContent='Copy link', 1200);
+  });
+});
+</script>
+</body>
+</html>
