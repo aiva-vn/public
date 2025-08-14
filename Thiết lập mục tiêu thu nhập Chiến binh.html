@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zoom Income Planner – Công cụ tính & kế hoạch theo tuần</title>
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --card: #121829;
+      --muted: #8aa0b9;
+      --text: #e7edf5;
+      --accent: #4aa7ff;
+      --accent2: #70e0a8;
+      --border: #1e2a44;
+      --warn: #ffcc66;
+      --danger: #ff7b7b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 80% -20%, rgba(74,167,255,0.12), transparent 60%),
+                  radial-gradient(900px 400px at 0% 0%, rgba(112,224,168,0.10), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 28px 20px 14px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0.2px;
+    }
+    header p { margin: 4px 0 0; color: var(--muted); }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03);
+      backdrop-filter: blur(6px);
+    }
+    .title {
+      font-size: 16px;
+      margin: 0 0 12px;
+      color: #d7e4ff;
+      letter-spacing: 0.2px;
+    }
+    .muted { color: var(--muted); font-size: 14px; }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f1526;
+      color: var(--text);
+      outline: none;
+    }
+    input[type="number"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,167,255,0.18); }
+    .kpi {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .kpi .item {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .kpi .item h3 { margin: 0 0 4px; font-size: 14px; color: #cfe3ff; }
+    .kpi .item p { margin: 0; font-size: 20px; font-weight: 700; }
+    .accent { color: var(--accent); }
+    .accent2 { color: var(--accent2); }
+    .warn { color: var(--warn); }
+    .danger { color: var(--danger); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: center;
+    }
+    th {
+      background: #0e1830;
+      color: #cfe3ff;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(74,167,255,0.15);
+      color: #bfe0ff;
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(74,167,255,0.18), rgba(74,167,255,0.08));
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { filter: brightness(1.1); }
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .todo {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #0f1526;
+    }
+    .todo h4 { margin: 0 0 8px; font-size: 14px; color: #d7e4ff; }
+    .todo ul { margin: 0; padding-left: 18px; }
+    .small { font-size: 12px; color: var(--muted); }
+    @media (max-width: 960px) {
+      .kpi { grid-template-columns: repeat(2, 1fr); }
+      .checklist { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Zoom Income Planner</h1>
+    <p>Công cụ tính khách mời & follow-up để đạt mục tiêu thu nhập – tự động chia theo <b>3 sự kiện = 3 tuần</b>.</p>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <div class="card" style="grid-column: span 5;">
+        <h3 class="title">Inputs <span class="badge">Chỉnh nếu cần</span></h3>
+        <div class="row">
+          <div>
+            <label>Thu nhập mong muốn (VND)</label>
+            <input type="number" id="desiredIncome" min="0" step="100000" placeholder="VD: 60,000,000" />
+          </div>
+          <div>
+            <label>Giá trị đơn hàng (VND)</label>
+            <input type="number" id="orderValue" value="6000000" min="0" step="100000">
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Hoa hồng của bạn</label>
+            <input type="number" id="commissionRate" value="20" min="0" max="100" step="0.5">
+          </div>
+          <div>
+            <label>Tỷ lệ chốt ngay trong sự kiện</label>
+            <input type="number" id="closeInEvent" value="10" min="0" max="100" step="0.5">
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Tỷ lệ quan tâm trong sự kiện</label>
+            <input type="number" id="interestShare" value="40" min="0" max="100" step="0.5">
+          </div>
+          <div>
+            <label>Tỷ lệ cân nhắc (nằm trong nhóm quan tâm)</label>
+            <input type="number" id="considerShare" value="30" min="0" max="100" step="0.5">
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Tỷ lệ follow-up thành công</label>
+            <input type="number" id="followUpSuccess" value="20" min="0" max="100" step="0.5">
+          </div>
+          <div>
+            <label>Số sự kiện (tuần)</label>
+            <input type="number" id="eventsCount" value="3" min="1" step="1">
+          </div>
+        </div>
+        <div class="actions" style="margin-top:12px;">
+          <button id="calcBtn">Tính toán</button>
+          <button id="resetBtn" title="Đưa về mặc định">Reset</button>
+          <button id="printBtn" title="In hoặc xuất PDF">In / PDF</button>
+        </div>
+        <p class="small" style="margin-top:8px;">Công thức chuyển đổi tổng = <b>Chốt trong sự kiện</b> + <b>Tỷ lệ cân nhắc × Follow-up thành công</b>.</p>
+      </div>
+
+      <div class="card" style="grid-column: span 7;">
+        <h3 class="title">Kết quả nhanh</h3>
+        <div class="kpi">
+          <div class="item">
+            <h3>Hoa hồng / đơn</h3>
+            <p id="kpiPerOrder" class="accent">-</p>
+          </div>
+          <div class="item">
+            <h3>Đơn cần có</h3>
+            <p id="kpiOrdersNeed" class="accent2">-</p>
+          </div>
+          <div class="item">
+            <h3>Tổng % chuyển đổi</h3>
+            <p id="kpiConv" class="warn">-</p>
+          </div>
+          <div class="item">
+            <h3>Khách mời cần (tổng)</h3>
+            <p id="kpiInviteTotal" class="danger">-</p>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Chỉ số</th>
+                <th>Giá trị</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTable">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column: span 12;">
+        <h3 class="title">Phân bổ theo từng sự kiện (mỗi tuần 1 sự kiện)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Tuần</th>
+              <th>Khách mời cần</th>
+              <th>Mua ngay (ước tính)</th>
+              <th>Cần follow-up</th>
+              <th>Mua từ follow-up (ước tính)</th>
+            </tr>
+          </thead>
+          <tbody id="eventsTable">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="grid-column: span 12;">
+        <h3 class="title">Việc cần làm mỗi tuần (checklist hành động)</h3>
+        <div class="checklist" id="checklists">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+function fmtNumber(n) {
+  if (isNaN(n)) return "-";
+  return n.toLocaleString("vi-VN");
+}
+function fmtMoney(n) {
+  if (isNaN(n)) return "-";
+  return n.toLocaleString("vi-VN");
+}
+function fmtPct(n) {
+  if (isNaN(n)) return "-";
+  return (n * 100).toFixed(2) + "%";
+}
+function ceil(n) { return Math.ceil(n); }
+
+function calc() {
+  const desiredIncome = Number(document.getElementById("desiredIncome").value || 0);
+  const orderValue = Number(document.getElementById("orderValue").value || 0);
+  const commissionRate = Number(document.getElementById("commissionRate").value || 0) / 100;
+  const closeInEvent = Number(document.getElementById("closeInEvent").value || 0) / 100;
+  const interestShare = Number(document.getElementById("interestShare").value || 0) / 100;
+  const considerShare = Number(document.getElementById("considerShare").value || 0) / 100;
+  const followUpSuccess = Number(document.getElementById("followUpSuccess").value || 0) / 100;
+  const eventsCount = Math.max(1, parseInt(document.getElementById("eventsCount").value || "3", 10));
+
+  const incomePerOrder = orderValue * commissionRate;
+  const ordersNeeded = desiredIncome > 0 && incomePerOrder > 0 ? Math.ceil(desiredIncome / incomePerOrder) : 0;
+
+  // tổng chuyển đổi = mua ngay + (cân nhắc * followup success)
+  const totalConv = closeInEvent + (considerShare * followUpSuccess);
+
+  const inviteTotal = totalConv > 0 ? Math.ceil(ordersNeeded / totalConv) : 0;
+  const followTotal = Math.ceil(inviteTotal * considerShare);
+  const buyNowTotal = Math.ceil(inviteTotal * closeInEvent);
+  const buyFUtotal = Math.ceil(inviteTotal * considerShare * followUpSuccess);
+  const ordersProjected = buyNowTotal + buyFUtotal;
+  const incomeProjected = ordersProjected * incomePerOrder;
+
+  // KPI
+  document.getElementById("kpiPerOrder").textContent = fmtMoney(incomePerOrder);
+  document.getElementById("kpiOrdersNeed").textContent = fmtNumber(ordersNeeded);
+  document.getElementById("kpiConv").textContent = fmtPct(totalConv);
+  document.getElementById("kpiInviteTotal").textContent = fmtNumber(inviteTotal);
+
+  // Summary table
+  const summary = [
+    ["Thu nhập mong muốn", fmtMoney(desiredIncome) + " VND"],
+    ["Hoa hồng / đơn", fmtMoney(incomePerOrder) + " VND"],
+    ["Đơn cần có", fmtNumber(ordersNeeded)],
+    ["Tổng % chuyển đổi", fmtPct(totalConv)],
+    ["Khách mời cần (tổng)", fmtNumber(inviteTotal)],
+    ["Cần follow-up (tổng)", fmtNumber(followTotal)],
+    ["Mua ngay (ước tính • tổng)", fmtNumber(buyNowTotal)],
+    ["Mua từ follow-up (ước tính • tổng)", fmtNumber(buyFUtotal)],
+    ["Tổng đơn dự kiến", fmtNumber(ordersProjected)],
+    ["Thu nhập dự kiến", fmtMoney(incomeProjected) + " VND"],
+  ];
+  const tbody = document.getElementById("summaryTable");
+  tbody.innerHTML = "";
+  summary.forEach(([k, v]) => {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td"); td1.textContent = k;
+    const td2 = document.createElement("td"); td2.textContent = v;
+    tr.appendChild(td1); tr.appendChild(td2);
+    tbody.appendChild(tr);
+  });
+
+  // Events allocation
+  const tbodyE = document.getElementById("eventsTable");
+  tbodyE.innerHTML = "";
+  const perEventInvite = eventsCount > 0 ? Math.ceil(inviteTotal / eventsCount) : 0;
+  const perEventFollow = Math.ceil(perEventInvite * considerShare);
+  const perEventBuyNow = Math.ceil(perEventInvite * closeInEvent);
+  const perEventBuyFU = Math.ceil(perEventInvite * considerShare * followUpSuccess);
+  for (let i = 0; i < eventsCount; i++) {
+    const tr = document.createElement("tr");
+    const td = (t)=>{ const x = document.createElement("td"); x.textContent = t; return x; };
+    tr.appendChild(td(`Tuần ${i+1}`));
+    tr.appendChild(td(fmtNumber(perEventInvite)));
+    tr.appendChild(td(fmtNumber(perEventBuyNow)));
+    tr.appendChild(td(fmtNumber(perEventFollow)));
+    tr.appendChild(td(fmtNumber(perEventBuyFU)));
+    tbodyE.appendChild(tr);
+  }
+
+  // Weekly checklists
+  const checklists = document.getElementById("checklists");
+  checklists.innerHTML = "";
+  for (let i = 0; i < eventsCount; i++) {
+    const week = i + 1;
+    const box = document.createElement("div");
+    box.className = "todo";
+    const h = document.createElement("h4");
+    h.textContent = `Tuần ${week} – Kế hoạch hành động`;
+    const ul = document.createElement("ul");
+
+    const li1 = document.createElement("li");
+    li1.innerHTML = `
+      Mời tối thiểu <b>${fmtNumber(perEventInvite)}</b> người dự sự kiện (chạy quảng cáo + email + gọi).
+      <div class="small">Mốc gợi ý: Mỗi ngày thêm 1/5 số mời; chốt danh sách trước 24h.</div>`;
+
+    const li2 = document.createElement("li");
+    li2.innerHTML = `
+      Chuẩn bị nội dung & kịch bản chốt: CTA rõ ràng, ưu đãi trong sự kiện, biểu mẫu thanh toán.`;
+
+    const li3 = document.createElement("li");
+    li3.innerHTML = `
+      Sau sự kiện trong 24–48h: follow-up tối thiểu <b>${fmtNumber(perEventFollow)}</b> người thuộc nhóm <i>cân nhắc</i>.
+      <div class="small">Chuỗi 3 chạm: (1) SMS/Email tóm tắt + ưu đãi, (2) Gọi/Inbox giải đáp, (3) Case study + chốt lịch.</div>`;
+
+    const li4 = document.createElement("li");
+    li4.innerHTML = `
+      Kỳ vọng: <b>${fmtNumber(perEventBuyNow)}</b> mua ngay trong sự kiện & <b>${fmtNumber(perEventBuyFU)}</b> mua nhờ follow-up.`;
+
+    const li5 = document.createElement("li");
+    li5.innerHTML = `
+      Báo cáo & tối ưu: cập nhật số liệu, học từ phản hồi, điều chỉnh thông điệp, ưu đãi, kênh mời.`;
+
+    ul.appendChild(li1); ul.appendChild(li2); ul.appendChild(li3); ul.appendChild(li4); ul.appendChild(li5);
+    box.appendChild(h); box.appendChild(ul);
+    checklists.appendChild(box);
+  }
+}
+
+document.getElementById("calcBtn").addEventListener("click", calc);
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("desiredIncome").value = "";
+  document.getElementById("orderValue").value = 6000000;
+  document.getElementById("commissionRate").value = 20;
+  document.getElementById("closeInEvent").value = 10;
+  document.getElementById("interestShare").value = 40;
+  document.getElementById("considerShare").value = 30;
+  document.getElementById("followUpSuccess").value = 20;
+  document.getElementById("eventsCount").value = 3;
+  calc();
+});
+document.getElementById("printBtn").addEventListener("click", ()=> window.print());
+
+// Auto-calc on load with defaults (desired income 0 to let bạn nhập)
+calc();
+</script>
+</body>
+</html>

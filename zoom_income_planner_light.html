@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zoom Income Planner — Bản Light</title>
+<style>
+  :root{
+    --fg:#0b1220; --muted:#5b6b82; --accent:#2b7cff; --line:#e8eef6; --bg:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg);line-height:1.5}
+  header{padding:18px 14px;border-bottom:1px solid var(--line);text-align:center}
+  header h1{margin:0 0 6px;font-size:20px}
+  header p{margin:0;color:var(--muted);font-size:14px}
+  .wrap{max-width:900px;margin:0 auto;padding:14px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+  .row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+  input[type=number]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px}
+  button{appearance:none;border:1px solid var(--line);background:#f5f8ff;color:#11315b;padding:8px 12px;border-radius:8px;cursor:pointer}
+  button:hover{background:#ebf2ff}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px;text-align:center}
+  th{background:#f7f9fc}
+  .muted{color:var(--muted);font-size:12px}
+  @media (max-width:720px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Zoom Income Planner — Bản Light</h1>
+  <p>Tối giản, dễ dùng. 3 sự kiện = 3 tuần (có thể đổi).</p>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Thu nhập mong muốn (VND)</label>
+        <input type="number" id="desiredIncome" step="100000" placeholder="VD: 60,000,000">
+      </div>
+      <div>
+        <label>Giá trị đơn hàng (VND)</label>
+        <input type="number" id="orderValue" value="6000000" step="100000">
+      </div>
+      <div>
+        <label>Hoa hồng của bạn (%)</label>
+        <input type="number" id="commissionRate" value="20" step="0.5">
+      </div>
+      <div>
+        <label>Tỷ lệ chốt ngay trong sự kiện (%)</label>
+        <input type="number" id="closeInEvent" value="10" step="0.5">
+      </div>
+      <div>
+        <label>Tỷ lệ cân nhắc (trong nhóm quan tâm 40%) (%)</label>
+        <input type="number" id="considerShare" value="30" step="0.5">
+      </div>
+      <div>
+        <label>Tỷ lệ follow-up thành công (%)</label>
+        <input type="number" id="followUpSuccess" value="20" step="0.5">
+      </div>
+      <div>
+        <label>Số sự kiện (tuần)</label>
+        <input type="number" id="eventsCount" value="3" min="1" step="1">
+      </div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button id="calcBtn">Tính</button>
+      <button id="resetBtn">Reset</button>
+      <span class="muted">Ghi chú: Tổng chuyển đổi = Chốt ngay + (Cân nhắc × Follow-up)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <tbody id="summary">
+        <!-- filled by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Tuần</th>
+          <th>Khách mời cần</th>
+          <th>Mua ngay (ước tính)</th>
+          <th>Cần follow-up</th>
+          <th>Mua nhờ follow-up (ước tính)</th>
+        </tr>
+      </thead>
+      <tbody id="weeks">
+        <!-- filled by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <strong>Việc cần làm mỗi tuần</strong>
+    <ul id="todos" class="muted" style="margin-top:6px">
+      <!-- filled by JS -->
+    </ul>
+  </div>
+</div>
+
+<script>
+function n(v){return Number(v)||0}
+function fmtN(x){return isNaN(x)?"-":x.toLocaleString("vi-VN")}
+function pct(x){return (x*100).toFixed(2)+"%"}
+
+function calc(){
+  const desiredIncome=n(document.getElementById("desiredIncome").value);
+  const orderValue=n(document.getElementById("orderValue").value);
+  const commissionRate=n(document.getElementById("commissionRate").value)/100;
+  const closeInEvent=n(document.getElementById("closeInEvent").value)/100;
+  const considerShare=n(document.getElementById("considerShare").value)/100;
+  const followUpSuccess=n(document.getElementById("followUpSuccess").value)/100;
+  const eventsCount=Math.max(1,parseInt(document.getElementById("eventsCount").value||"3",10));
+
+  const incomePerOrder=orderValue*commissionRate;
+  const ordersNeeded=(desiredIncome>0 && incomePerOrder>0)?Math.ceil(desiredIncome/incomePerOrder):0;
+  const totalConv=closeInEvent + (considerShare*followUpSuccess);
+
+  const inviteTotal= totalConv>0 ? Math.ceil(ordersNeeded/totalConv) : 0;
+  const followTotal= Math.ceil(inviteTotal*considerShare);
+  const buyNowTotal= Math.ceil(inviteTotal*closeInEvent);
+  const buyFUtotal= Math.ceil(inviteTotal*considerShare*followUpSuccess);
+  const incomeProjected=(buyNowTotal+buyFUtotal)*incomePerOrder;
+
+  // summary
+  const s=[
+    ["Hoa hồng/đơn", fmtN(incomePerOrder)+" VND"],
+    ["Đơn cần có", fmtN(ordersNeeded)],
+    ["Tổng % chuyển đổi", pct(totalConv)],
+    ["Khách mời cần (tổng)", fmtN(inviteTotal)],
+    ["Cần follow-up (tổng)", fmtN(followTotal)],
+    ["Mua ngay (tổng)", fmtN(buyNowTotal)],
+    ["Mua nhờ follow-up (tổng)", fmtN(buyFUtotal)],
+    ["Thu nhập dự kiến", fmtN(incomeProjected)+" VND"]
+  ];
+  const sum=document.getElementById("summary");
+  sum.innerHTML=s.map(([k,v])=>`<tr><td style="text-align:left;width:55%">${k}</td><td>${v}</td></tr>`).join("");
+
+  // weeks
+  const perInvite=eventsCount?Math.ceil(inviteTotal/eventsCount):0;
+  const perFollow=Math.ceil(perInvite*considerShare);
+  const perBuyNow=Math.ceil(perInvite*closeInEvent);
+  const perBuyFU=Math.ceil(perInvite*considerShare*followUpSuccess);
+  const weeks=document.getElementById("weeks");
+  weeks.innerHTML="";
+  for(let i=0;i<eventsCount;i++){
+    weeks.innerHTML+=`<tr>
+      <td>Tuần ${i+1}</td>
+      <td>${fmtN(perInvite)}</td>
+      <td>${fmtN(perBuyNow)}</td>
+      <td>${fmtN(perFollow)}</td>
+      <td>${fmtN(perBuyFU)}</td>
+    </tr>`;
+  }
+
+  // todos (ngắn gọn)
+  const todos=document.getElementById("todos");
+  todos.innerHTML=`
+    <li>Mời tối thiểu <b>${fmtN(perInvite)}</b> người/tuần (chia đều mỗi ngày).</li>
+    <li>Chuẩn bị slide, CTA, form thanh toán; rehearsal 30 phút.</li>
+    <li>Follow-up <b>${fmtN(perFollow)}</b> người trong 48 giờ sau sự kiện.</li>
+    <li>Báo cáo số liệu & điều chỉnh thông điệp/ưu đãi cho tuần kế.</li>`;
+}
+
+document.getElementById("calcBtn").addEventListener("click", calc);
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("desiredIncome").value="";
+  document.getElementById("orderValue").value=6000000;
+  document.getElementById("commissionRate").value=20;
+  document.getElementById("closeInEvent").value=10;
+  document.getElementById("considerShare").value=30;
+  document.getElementById("followUpSuccess").value=20;
+  document.getElementById("eventsCount").value=3;
+  calc();
+});
+
+// init
+calc();
+</script>
+</body>
+</html>

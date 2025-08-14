@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Hoạch Định Mục Tiêu Bán Hàng V2.0</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .main-header {
+             background: linear-gradient(135deg, #172b4d 0%, #32325d 100%);
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(50, 50, 93, 0.1), 0 6px 12px rgba(0, 0, 0, 0.08);
+        }
+        .stat-card {
+            border-left: 4px solid;
+        }
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary {
+            background-color: #5e72e4;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #4155c8;
+        }
+        .btn-secondary {
+            background-color: #11cdef;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #0da5c0;
+        }
+        #results-container {
+            display: none;
+        }
+        .section-title {
+            border-bottom: 2px solid #5e72e4;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="main-header text-white p-8 rounded-xl mb-8 shadow-lg">
+            <h1 class="text-3xl md:text-4xl font-extrabold">Công Cụ Hoạch Định Mục Tiêu V2.0</h1>
+            <p class="mt-2 text-lg opacity-80">Biến mục tiêu thu nhập thành kế hoạch hành động chi tiết hàng ngày.</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Input & Assumptions -->
+            <div class="lg:col-span-1 space-y-8">
+                <!-- Input Card -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">1. Nhập Mục Tiêu</h2>
+                    <label for="desiredIncome" class="block text-md font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-coins mr-2 text-yellow-500"></i>
+                        Thu nhập mong muốn (VNĐ)
+                    </label>
+                    <input type="text" id="desiredIncome" class="w-full px-4 py-3 border border-gray-300 rounded-lg text-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="Ví dụ: 20,000,000">
+                    <button id="calculateBtn" class="w-full btn-primary font-bold py-3 px-4 rounded-lg text-lg mt-4 flex items-center justify-center">
+                        <i class="fas fa-rocket mr-2"></i>
+                        Xây Dựng Kế Hoạch
+                    </button>
+                </div>
+
+                <!-- Assumptions Card -->
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">2. Các Giả Định</h2>
+                    <ul class="text-gray-700 space-y-3">
+                        <li class="flex items-start"><i class="fas fa-tag text-blue-500 w-5 mt-1"></i><span>Đơn hàng: <strong>6,000,000 VNĐ</strong></span></li>
+                        <li class="flex items-start"><i class="fas fa-percent text-green-500 w-5 mt-1"></i><span>Hoa hồng: <strong>20%</strong> (1.2M VNĐ/đơn)</span></li>
+                        <li class="flex items-start"><i class="fas fa-calendar-alt text-purple-500 w-5 mt-1"></i><span>Sự kiện: <strong>3 sự kiện/tháng</strong></span></li>
+                        <li class="flex items-start"><i class="fas fa-users text-orange-500 w-5 mt-1"></i><span>Tỷ lệ quan tâm: <strong>40%</strong></span></li>
+                        <li class="flex items-start"><i class="fas fa-handshake text-teal-500 w-5 mt-1"></i><span>Chốt tại sự kiện: <strong>10%</strong> (người q.tâm)</span></li>
+                        <li class="flex items-start"><i class="fas fa-user-clock text-red-500 w-5 mt-1"></i><span>Cần theo dõi: <strong>30%</strong> (người q.tâm)</span></li>
+                        <li class="flex items-start"><i class="fas fa-user-check text-indigo-500 w-5 mt-1"></i><span>Chốt sau theo dõi: <strong>20%</strong></span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right Column: Results -->
+            <div class="lg:col-span-2">
+                <div id="results-container" class="card p-6 sm:p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 section-title">Kế Hoạch Hành Động Chi Tiết</h2>
+                    
+                    <!-- Overall Goals -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fa-solid fa-flag-checkered mr-2 text-indigo-500"></i>Mục Tiêu Tổng Quan</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center bg-gray-50 p-4 rounded-lg">
+                                <p class="text-2xl font-bold text-indigo-600" id="totalIncome">0</p>
+                                <p class="text-sm text-gray-500">Thu Nhập</p>
+                            </div>
+                            <div class="text-center bg-gray-50 p-4 rounded-lg">
+                                <p class="text-2xl font-bold text-green-600" id="totalSales">0</p>
+                                <p class="text-sm text-gray-500">Đơn Hàng</p>
+                            </div>
+                            <div class="text-center bg-gray-50 p-4 rounded-lg">
+                                <p class="text-2xl font-bold text-blue-600" id="guestsToInvite">0</p>
+                                <p class="text-sm text-gray-500">Khách Mời</p>
+                            </div>
+                            <div class="text-center bg-gray-50 p-4 rounded-lg">
+                                <p class="text-2xl font-bold text-orange-600" id="peopleToFollowUp">0</p>
+                                <p class="text-sm text-gray-500">Cần Theo Dõi</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Plan -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fa-solid fa-calendar-week mr-2 text-purple-500"></i>Kế Hoạch Mỗi Tuần (Cho 1 Sự Kiện)</h3>
+                        <div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg space-y-2">
+                            <p>Để tiến tới mục tiêu, mỗi tuần bạn cần:</p>
+                            <p><i class="fa-solid fa-user-plus text-purple-600 w-5"></i> Mời <strong class="text-xl text-purple-800" id="weeklyGuests">0</strong> khách hàng tham gia sự kiện.</p>
+                            <p><i class="fa-solid fa-phone text-purple-600 w-5"></i> Theo dõi <strong class="text-xl text-purple-800" id="weeklyFollowUps">0</strong> khách hàng tiềm năng từ sự kiện tuần trước.</p>
+                            <p><i class="fa-solid fa-star text-purple-600 w-5"></i> Mục tiêu chốt <strong class="text-xl text-purple-800" id="weeklySales">0</strong> đơn hàng mỗi tuần.</p>
+                        </div>
+                    </div>
+
+                    <!-- Daily Plan -->
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4"><i class="fa-solid fa-person-running mr-2 text-teal-500"></i>Hành Động Mỗi Ngày (Giả sử 5 ngày/tuần)</h3>
+                         <div class="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-r-lg space-y-2">
+                            <p>Hãy biến kế hoạch tuần thành hành động cụ thể mỗi ngày:</p>
+                            <p><i class="fa-solid fa-envelope text-teal-600 w-5"></i> Tiếp cận & mời <strong class="text-xl text-teal-800" id="dailyGuests">0</strong> người mới.</p>
+                            <p><i class="fa-solid fa-list-check text-teal-600 w-5"></i> Chăm sóc & theo dõi <strong class="text-xl text-teal-800" id="dailyFollowUps">0</strong> khách hàng tiềm năng.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Download Button -->
+                    <div class="text-center mt-8">
+                        <button id="downloadBtn" class="btn-secondary font-bold py-3 px-6 rounded-lg text-lg flex items-center justify-center mx-auto">
+                            <i class="fas fa-download mr-2"></i>
+                            Tải Kế Hoạch (HTML)
+                        </button>
+                    </div>
+                </div>
+                 <div id="welcome-message" class="card p-8 text-center">
+                    <i class="fas fa-chart-line fa-3x text-gray-300 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-700">Sẵn sàng chinh phục mục tiêu?</h2>
+                    <p class="text-gray-500 mt-2">Hãy nhập thu nhập mong muốn của bạn và nhấn "Xây Dựng Kế Hoạch" để xem các con số kỳ diệu!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- UTILITY FUNCTIONS ---
+        function formatNumber(num) {
+            if (isNaN(num)) return '0';
+            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+        }
+
+        function parseNumber(str) {
+            return parseInt(str.replace(/,/g, ''), 10) || 0;
+        }
+
+        // --- DOM ELEMENTS ---
+        const desiredIncomeInput = document.getElementById('desiredIncome');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultsContainer = document.getElementById('results-container');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Result display elements
+        const totalIncomeEl = document.getElementById('totalIncome');
+        const totalSalesEl = document.getElementById('totalSales');
+        const guestsToInviteEl = document.getElementById('guestsToInvite');
+        const peopleToFollowUpEl = document.getElementById('peopleToFollowUp');
+        const weeklyGuestsEl = document.getElementById('weeklyGuests');
+        const weeklyFollowUpsEl = document.getElementById('weeklyFollowUps');
+        const weeklySalesEl = document.getElementById('weeklySales');
+        const dailyGuestsEl = document.getElementById('dailyGuests');
+        const dailyFollowUpsEl = document.getElementById('dailyFollowUps');
+
+        // --- EVENT LISTENERS ---
+        desiredIncomeInput.addEventListener('input', (e) => {
+            let value = parseNumber(e.target.value);
+            e.target.value = formatNumber(value);
+        });
+
+        calculateBtn.addEventListener('click', calculateAndDisplay);
+        
+        downloadBtn.addEventListener('click', () => {
+            const pageHTML = document.documentElement.outerHTML;
+            const blob = new Blob([pageHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ke-hoach-ban-hang.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // --- CALCULATION LOGIC ---
+        function calculateAndDisplay() {
+            const desiredIncome = parseNumber(desiredIncomeInput.value);
+            if (desiredIncome <= 0) {
+                alert('Vui lòng nhập một số thu nhập hợp lệ.');
+                return;
+            }
+
+            // --- Constants ---
+            const unitPrice = 6000000;
+            const commissionRate = 0.20;
+            const commissionPerSale = unitPrice * commissionRate;
+            const eventsPerMonth = 3;
+            const daysPerWeek = 5;
+
+            const interestRate = 0.40;
+            const inEventConversionRate = 0.10;
+            const followUpPoolRate = 0.30;
+            const followUpConversionRate = 0.20;
+
+            // --- Main Calculations ---
+            // 1. Total sales needed
+            const totalSalesNeeded = Math.ceil(desiredIncome / commissionPerSale);
+
+            // 2. Overall conversion rate per guest
+            const salesFromInEvent = interestRate * inEventConversionRate; // 0.4 * 0.1 = 0.04
+            const salesFromFollowUp = interestRate * followUpPoolRate * followUpConversionRate; // 0.4 * 0.3 * 0.2 = 0.024
+            const overallConversionPerGuest = salesFromInEvent + salesFromFollowUp; // 0.064
+
+            // 3. Total guests & follow-ups
+            const totalGuestsToInvite = Math.ceil(totalSalesNeeded / overallConversionPerGuest);
+            const totalPeopleToFollowUp = Math.ceil(totalGuestsToInvite * interestRate * followUpPoolRate);
+            
+            // 4. Weekly breakdown
+            const weeklyGuests = Math.ceil(totalGuestsToInvite / eventsPerMonth);
+            const weeklyFollowUps = Math.ceil(totalPeopleToFollowUp / eventsPerMonth);
+            const weeklySales = Math.ceil(totalSalesNeeded / eventsPerMonth);
+
+            // 5. Daily breakdown
+            const dailyGuests = Math.ceil(weeklyGuests / daysPerWeek);
+            const dailyFollowUps = Math.ceil(weeklyFollowUps / daysPerWeek);
+
+            // --- Display Results ---
+            totalIncomeEl.textContent = formatNumber(desiredIncome) + ' ₫';
+            totalSalesEl.textContent = formatNumber(totalSalesNeeded);
+            guestsToInviteEl.textContent = formatNumber(totalGuestsToInvite);
+            peopleToFollowUpEl.textContent = formatNumber(totalPeopleToFollowUp);
+
+            weeklyGuestsEl.textContent = formatNumber(weeklyGuests);
+            weeklyFollowUpsEl.textContent = formatNumber(weeklyFollowUps);
+            weeklySalesEl.textContent = formatNumber(weeklySales);
+
+            dailyGuestsEl.textContent = formatNumber(dailyGuests);
+            dailyFollowUpsEl.textContent = formatNumber(dailyFollowUps);
+
+            // Show results and hide welcome message
+            resultsContainer.style.display = 'block';
+            welcomeMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
